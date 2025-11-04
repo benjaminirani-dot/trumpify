@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trump File Converter by Ben</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .glass { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+    .mono { font-family: monospace; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-red-600 via-orange-500 to-yellow-500 text-black min-h-screen p-6">
+
+  <h1 class="text-4xl font-bold text-center mb-2">Trump File Converter</h1>
+  <p class="text-center mb-6 text-lg">Upload ANY file → Get Trump Version! (Free, No API)</p>
+  <p class="text-center text-sm opacity-80">by <strong>Ben</strong></p>
+
+  <div class="max-w-2xl mx-auto space-y-6">
+    
+    <!-- Upload -->
+    <div class="glass p-6 rounded-xl text-center">
+      <label class="block text-sm font-bold mb-2">Upload Any File</label>
+      <input type="file" id="fileInput" class="w-full p-3 rounded bg-white/20 border border-white/30">
+      <p class="text-xs mt-2 opacity-70">Images: Trump overlay | PDFs/Text: Trump meme | Videos: Trump thumbnail</p>
+    </div>
+
+    <!-- Generate Button -->
+    <button id="genTrump" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700">
+      Make Trump Version!
+    </button>
+
+    <!-- Preview -->
+    <div id="preview" class="glass p-6 rounded-xl hidden">
+      <h3 class="font-bold mb-3 text-center">Trump-ified Output</h3>
+      <img id="trumpImg" class="w-full rounded max-h-96 mx-auto block" alt="Trump conversion">
+      <a id="download" class="mt-4 w-full text-center py-2 bg-green-600 text-white rounded block hidden" download="trump-version.png">Download Trump Image</a>
+    </div>
+
+    <!-- Log -->
+    <div id="log" class="glass p-3 h-24 overflow-auto mono text-xs bg-white/10 rounded text-center"></div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const log = msg => {
+      $('log').innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+      $('log').scrollTop = $('log').scrollHeight;
+    };
+
+    // Trump image URL (free public domain from Pixabay)
+    const trumpBase = 'https://cdn.pixabay.com/photo/2016/11/19/14/00/icon-1838399_1280.png'; // Simple Trump icon
+
+    $('genTrump').onclick = async () => {
+      const file = $('fileInput').files[0];
+      if (!file) return alert('Upload a file first!');
+
+      log('Converting to Trump...');
+      $('preview').classList.remove('hidden');
+      $('trumpImg').style.display = 'none';
+      $('download').classList.add('hidden');
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 512;
+      canvas.height = 512;
+
+      try {
+        // Load Trump base image
+        const trumpImg = new Image();
+        trumpImg.crossOrigin = 'anonymous';
+        trumpImg.src = trumpBase;
+        await new Promise(r => trumpImg.onload = r);
+
+        // Handle file type
+        if (file.type.startsWith('image/')) {
+          // For images: Load & overlay Trump
+          const reader = new FileReader();
+          reader.onload = e => {
+            const userImg = new Image();
+            userImg.src = e.target.result;
+            userImg.onload = () => {
+              ctx.drawImage(userImg, 0, 0, canvas.width, canvas.height);
+              ctx.globalAlpha = 0.7; // Semi-transparent overlay
+              ctx.drawImage(trumpImg, 100, 100, 300, 300); // Trump on top
+              ctx.globalAlpha = 1;
+              ctx.fillStyle = 'white';
+              ctx.font = 'bold 24px Arial';
+              ctx.textAlign = 'center';
+              ctx.fillText('TRUMP-IFIED!', canvas.width/2, 50);
+              $('trumpImg').src = canvas.toDataURL('image/png');
+              $('trumpImg').style.display = 'block';
+              $('download').href = $('trumpImg').src;
+              $('download').classList.remove('hidden');
+              log('Image Trump-ified! ✅');
+            };
+          };
+          reader.readAsDataURL(file);
+        } else {
+          // For non-images: Meme with file name
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(trumpImg, 50, 50, 400, 300);
+          ctx.fillStyle = 'black';
+          ctx.font = 'bold 28px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${file.name} → TRUMP APPROVED!`, canvas.width/2, 450);
+          ctx.font = '20px Arial';
+          ctx.fillText('File converted to Trump style', canvas.width/2, 480);
+          $('trumpImg').src = canvas.toDataURL('image/png');
+          $('trumpImg').style.display = 'block';
+          $('download').href = $('trumpImg').src;
+          $('download').classList.remove('hidden');
+          log(`"${file.name}" Trump-ified! (Meme mode) ✅`);
+        }
+      } catch (e) {
+        log(`Error: ${e.message} ❌`);
+      }
+    };
+
+    // Auto-log
+    window.onload = () => log('Ready! Upload a file & click Generate.');
+  </script>
+
+  <footer class="text-center mt-10 text-xs opacity-70">
+    © 2025 Ben · 100% Free · Upload Anything → Get Trump!
+  </footer>
+</body>
+</html>
